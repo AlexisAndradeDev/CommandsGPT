@@ -6,7 +6,7 @@ to the Config object (as seen in main.py)
 from typing import Any
 from pathlib import Path
 
-from commands_gpt.modules.config import Config
+from commands_gpt.config import Config
 
 commands = {
     "WRITE_TO_USER": {
