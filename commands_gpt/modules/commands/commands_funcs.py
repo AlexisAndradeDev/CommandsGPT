@@ -1,4 +1,7 @@
+import os
+from pathlib import Path
 from typing import Any, Callable
+
 from ..chat import get_answer_from_model
 from ..config import Config
 
@@ -36,6 +39,14 @@ COMMANDS = {
         "generates_data": {
             "result": {"description": "Result of the condition: 0 or 1.", "type": "boolean"},
         },
+    },
+    "WRITE_FILE": {
+        "description": "Write a file.",
+        "arguments": {
+            "content": {"description": "Content that will be written.", "type": "string"},
+            "file_path": {"description": "Complete path of the file that will be written.", "type": "string"},
+        },
+        "generates_data": {},
     },
 }
 
@@ -92,6 +103,14 @@ def if_command(config: Config, condition: str) -> dict[str, Any]:
         "result": result,
     }
     return results
+
+def write_file_command(config: Config, content: str, file_path: str) -> dict[str, Any]:
+    file_dir = Path(file_path).parent
+    assert file_dir.exists(), f"Container directory '{file_dir}' does not exist."
+    with open(file_path, "w+", encoding="utf-8") as f:
+        f.write(content)
+        f.close()
+    return {}
 
 COMMAND_NAME_TO_COMMAND_FUNC = {
     key: eval(f"{key.lower()}_command")
