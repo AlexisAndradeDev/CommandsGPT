@@ -17,6 +17,6 @@ config = Config(chat_model, commands, command_name_to_func)
 
 instruction = input("Enter your prompt: ")
 graph, graph_data = recognize_instruction_and_create_graph(
-    instruction, config.chat_model, commands, command_name_to_func,
+    instruction, config.chat_model, config.commands, config.command_name_to_func,
 )
-execute_commands(config, graph, graph_data, commands, command_name_to_func)
+execute_commands(config, graph, graph_data, config.commands, config.command_name_to_func)
