@@ -1,6 +1,6 @@
 import functools
-from typing import Any
 import json
+from typing import Any, Callable
 
 from . import commands_funcs
 from .. import regex
@@ -9,14 +9,17 @@ from ..config import Config
 
 @functools.total_ordering
 class CommandNode:
-    def __init__(self, data):
+    def __init__(self, data: list, commands: dict[str, dict], command_name_to_func: dict[str, Callable]):
         self.id = data[0]
         self.previous_command_id = data[1][0] if data[1] else None
         self.dependent_on_data = data[1][1] if data[1] else None
         self.required_value = data[1][2] if data[1] else None
         self.command_name = data[2]
-        assert self.command_name in commands_funcs.COMMANDS, f"Command '{self.command_name}' does not exist."
-        self.command = commands_funcs.get_command(self.command_name)
+
+        assert self.command_name in commands, f"Command '{self.command_name}' does not exist."
+        assert self.command_name in command_name_to_func, f"Command '{self.command_name}' does not have a function declaration."
+
+        self.command = command_name_to_func[self.command_name]
         self.arguments = data[3] if len(data) > 3 else None
 
     def __eq__(self, other):
@@ -32,15 +35,16 @@ class CommandNode:
         print(f"\n\nRunning '{self.command_name}' command with id {self.id}...")
         self.data_generated = self.command(config, **arguments)
 
-def build_dependency_graph(commands_data: list[list]) -> dict[str, CommandNode]:
+def build_dependency_graph(commands_data: list[list], commands: dict[str, dict], command_name_to_func: dict[str, Callable]) -> dict[str, CommandNode]:
     graph = {}
     for command_data in commands_data:
-        node = CommandNode(command_data)
+        node = CommandNode(command_data, commands, command_name_to_func)
         graph[node.id] = node
     return graph
 
 def execute_node(node: CommandNode, graph: dict[str, CommandNode], config: Config,
-        generated_data: dict, data_references: dict[dict[int, Any]], raw_commands_data: StaticVar):
+        generated_data: dict, data_references: dict[dict[int, Any]], raw_commands_data: StaticVar,
+        commands: dict[str, dict], command_name_to_func: dict[str, Callable]):
     if node.id in generated_data:
         # already executed
         return generated_data[node.id]
@@ -48,7 +52,7 @@ def execute_node(node: CommandNode, graph: dict[str, CommandNode], config: Confi
     if node.previous_command_id is not None:
         command_generated_data = execute_node(
             graph[node.previous_command_id], graph, config, generated_data, 
-            data_references, raw_commands_data,
+            data_references, raw_commands_data, commands, command_name_to_func,
         )
 
         if node.dependent_on_data:
@@ -68,7 +72,7 @@ def execute_node(node: CommandNode, graph: dict[str, CommandNode], config: Confi
         except Exception as e:
             print(f"!!! Raw commands data: {raw_commands_data}")
             raise e
-        graph_ = build_dependency_graph(commands_data)
+        graph_ = build_dependency_graph(commands_data, commands, command_name_to_func)
         for key in graph_:
             graph[key] = graph_[key]
 
@@ -84,7 +88,9 @@ def print_commands_graph(graph: dict[str, CommandNode]):
             print(f"\n\t\tResult field '{node.dependent_on_data}' of node «{node.previous_command_id}» must have value «{node.required_value}» in order to execute this node.")
     print("\n--- -------------- ---\n")
 
-def execute_commands(config: Config, graph: dict[str, CommandNode], graph_data: dict[str, Any]):
+def execute_commands(config: Config, graph: dict[str, CommandNode], 
+        graph_data: dict[str, Any], commands: dict[str, dict], 
+        command_name_to_func: dict[str, Callable]):
     print_commands_graph(graph)
 
     generated_data = {}
@@ -92,5 +98,5 @@ def execute_commands(config: Config, graph: dict[str, CommandNode], graph_data: 
         node = graph[node_id]
         execute_node(
             node, graph, config, generated_data, graph_data["data_references"],
-            graph_data["raw_commands_data"],
+            graph_data["raw_commands_data"], commands, command_name_to_func,
         )
