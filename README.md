@@ -6,7 +6,7 @@ Create new commands easily by describing them using natural language and coding 
 
 # Installation
 
-Install the packages inside of the requirements.txt file.
+Install the `commandsgpt` module.
 
 ```
 pip install commandsgpt
