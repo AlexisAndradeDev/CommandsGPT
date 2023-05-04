@@ -1,13 +1,11 @@
 import openai
-import json
-from typing import Any, Callable
+from typing import Callable
 
-from .commands.graphs import CommandNode
 from .static import StaticVar
-from . import regex
-from .commands import graphs
+from .commands.graphs import Graph
 
-def recognize_instruction(instruction: str, model: str, commands: dict) -> dict[str, Any]:
+
+def recognize_instruction(instruction: str, model: str, commands: dict) -> str:
     """
     Analyzes an instruction and creates data to create a graph of commands
     that will fulfill the instruction.
@@ -19,13 +17,7 @@ def recognize_instruction(instruction: str, model: str, commands: dict) -> dict[
             natural language.
 
     Returns:
-        tuple: A dict containing keys:
-        
-            'commands_data': data of the commands (to create a graph).
-
-            'data_references': data references (data that will be injected).
-            
-            'raw_commands_data': string commands data (the answer from the instruction recognition model).
+        a string: commands data (the answer from the instruction recognition model).
     """
     messages = [
         {
@@ -70,15 +62,11 @@ def recognize_instruction(instruction: str, model: str, commands: dict) -> dict[
 
     raw_commands_data = StaticVar(response["choices"][0]["message"]["content"])
 
-    data_references = regex.find_data_references_indices(raw_commands_data.val)
-    commands_data = regex.nullify_all_data_references(raw_commands_data.val)
-    commands_data = json.loads(commands_data)
-
-    return {"commands_data": commands_data, "data_references": data_references,
-        "raw_commands_data": raw_commands_data}
+    return raw_commands_data
 
 def recognize_instruction_and_create_graph(prompt: str, model: str, 
         commands: dict[str, dict], command_name_to_func: dict[str, Callable]) -> \
-        tuple[dict[str, CommandNode], dict[str, Any]]:
-    graph_data = recognize_instruction(prompt, model, commands)
-    return graphs.build_dependency_graph(graph_data["commands_data"], commands, command_name_to_func), graph_data
+        Graph:
+    raw_commands_data = recognize_instruction(prompt, model, commands)
+    graph = Graph(raw_commands_data, commands, command_name_to_func)
+    return graph

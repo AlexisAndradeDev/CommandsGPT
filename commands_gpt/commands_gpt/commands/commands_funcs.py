@@ -2,6 +2,7 @@ from typing import Any, Callable
 
 from ..chat import get_answer_from_model
 from ..config import Config
+from .graphs import Graph, generate_graph_data
 
 ESSENTIAL_COMMANDS = {
     "THINK": {
@@ -26,12 +27,12 @@ ESSENTIAL_COMMANDS = {
 
 # Commands functions
 # Must be named 'LowercaseCommandName_command'
-# The first argument must be the Config object
+# The first argument must be the Config object, followed by the Graph object
 # The arguments must match the arguments from the ESSENTIAL_COMMANDS dictionary
 # The return value must be a dictionary which keys must match the "generates_data" keys
 # The data types must match the ones declared in the ESSENTIAL_COMMANDS dictionary
 
-def think_command(config: Config, about: str) -> dict[str, Any]:
+def think_command(config: Config, graph: Graph, about: str) -> dict[str, Any]:
     messages = [
         {
             "role": "system", 
@@ -45,7 +46,7 @@ def think_command(config: Config, about: str) -> dict[str, Any]:
     }
     return results
 
-def if_command(config: Config, condition: str) -> dict[str, Any]:
+def if_command(config: Config, graph: Graph, condition: str) -> dict[str, Any]:
     messages = [
         {
             "role": "system", 

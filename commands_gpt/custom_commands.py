@@ -7,6 +7,7 @@ from typing import Any
 from pathlib import Path
 
 from commands_gpt.config import Config
+from commands_gpt.commands.graphs import Graph
 
 commands = {
     "WRITE_TO_USER": {
@@ -37,26 +38,26 @@ commands = {
 
 # Commands functions
 # The name of the function is irrelevant
-# The first argument must be the Config object
+# The first argument must be the Config object, followed by the Graph object
 # The arguments must match the arguments from the commands dictionary
 # The return value must be a dictionary which keys must match the "generates_data" keys
 # The data types must match the ones declared in the commands dictionary
 
-def write_to_user_command(config: Config, content: str) -> dict[str, Any]:
+def write_to_user_command(config: Config, graph: Graph, content: str) -> dict[str, Any]:
     # add newlines because regex data injection replaces newline characters
     # by \\n substrings.
     content_with_newlines = "\n".join(content.split("\\n"))
     print(f">>> {content_with_newlines}")
     return {}
 
-def request_user_input_command(config: Config, message: str) -> dict[str, Any]:
+def request_user_input_command(config: Config, graph: Graph, message: str) -> dict[str, Any]:
     input_ = input(f"{message}\n*: ")
     results = {
         "input": input_,
     }
     return results
 
-def write_file_command(config: Config, content: str, file_path: str) -> dict[str, Any]:
+def write_file_command(config: Config, graph: Graph, content: str, file_path: str) -> dict[str, Any]:
     file_dir = Path(file_path).parent
     assert file_dir.exists(), f"Container directory '{file_dir}' does not exist."
     with open(file_path, "w+", encoding="utf-8") as f:
