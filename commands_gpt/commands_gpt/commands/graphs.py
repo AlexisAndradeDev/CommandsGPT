@@ -73,11 +73,11 @@ class Graph:
             return self.generated_data[node.id]
 
         if node.previous_command_id is not None:
-            command_generated_data = self.execute_node(node.previous_command_id, config)
+            previous_node_data_generated = self.execute_node(node.previous_command_id, config)
 
             if node.dependent_on_data:
-                if command_generated_data[node.dependent_on_data] != node.required_value:
-                    return None
+                if previous_node_data_generated[node.dependent_on_data] != node.required_value:
+                    return {}
 
         node.execute_command(config, self, node.arguments)
         self.generated_data[node.id] = node.data_generated
