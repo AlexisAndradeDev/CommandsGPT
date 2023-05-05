@@ -50,6 +50,9 @@ def recognize_instruction(instruction: str, model: str, commands: dict) -> str:
             """\n\nExample 3:"""
             """\nUser prompt: 'Look up the best courses on ASP.Net on Google and show me the first page that appears, if it is relevant.'"""
             """\nYour response might be: '[[1, [], "%s", {"query": "best courses on ASP.Net"}], [2, [1, null, null], "%s", {"url": "__&1.urls[0]__"}], [3, [2, null, null], "%s", {"condition": "Is this a relevant course on ASP.Net? __&2.text__"}], [4, [3, "result", 1], "%s", {"content": "Relevant course: __&1.urls[0]__"}], [5, [3, "result", 0], "%s", {"content": "It is not relevant."}]]'""" % ("SEARCH_GOOGLE", "READ_WEBPAGE", "IF", "WRITE_TO_USER", "WRITE_TO_USER")
+            +
+
+            """\n\nThe structure is JSON-like (so, use double quotes to create str, etc.)"""
         }
     ]
     messages.append({"role": "user", "content": instruction})

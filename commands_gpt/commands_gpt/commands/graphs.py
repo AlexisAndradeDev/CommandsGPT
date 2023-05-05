@@ -32,6 +32,8 @@ class CommandNode:
 
     def execute_command(self, config: Config, graph, arguments: dict[str, Any]):
         print(f"\n\nRunning '{self.command_name}' command with id {self.id}...")
+        if config.verbosity >= 2:
+            print(f"Using arguments: {arguments}")
         self.data_generated = self.command(config, graph, **arguments)
 
 class Graph:
@@ -44,7 +46,7 @@ class Graph:
         self.raw_commands_data = raw_commands_data
         self.commands = commands
         self.command_name_to_func = command_name_to_func
-        self.commands_data, self.data_references = generate_graph_data(raw_commands_data)
+        self.commands_data, self.data_references = generate_graph_data(raw_commands_data.val)
         self.build_nodes()
 
     def build_nodes(self):
@@ -99,7 +101,8 @@ class Graph:
 
     def execute_commands(self, config: Config):
         self.initialize_graph()
-        self.print_graph()
+        if config.verbosity >= 1:
+            self.print_graph()
 
         for node_id in sorted(self.nodes.keys()):
             self.execute_node(node_id, config)
@@ -118,8 +121,8 @@ def generate_graph_data(raw_commands_data):
 
             data_references: data references (data that will be injected).
     """
-    data_references = regex.find_data_references_indices(raw_commands_data.val)
-    commands_data = regex.nullify_all_data_references(raw_commands_data.val)
+    data_references = regex.find_data_references_indices(raw_commands_data)
+    commands_data = regex.nullify_all_data_references(raw_commands_data)
 
     # TODO: Fix JSON parsing error that is sometimes raised when newline characters are written.
     try:
