@@ -39,7 +39,7 @@ commands = {
 
 *Example of a command function*
 ```
-def request_user_input_command(config: Config, message: str) -> dict[str, Any]:
+def request_user_input_command(config: Config, graph: Graph, message: str) -> dict[str, Any]:
     input_ = input(f"{message}\n*: ")
     results = {
         "input": input_,
@@ -66,7 +66,7 @@ add_essential_commands(commands, command_name_to_func)
 
 Your `config` object: 
 ```
-config = Config("gpt-4-0314", commands, command_name_to_func)
+config = Config("gpt-4-0314", verbosity=1) # verbosity is optional
 ```
 
 Create an instruction:
@@ -78,15 +78,15 @@ instruction = input("Enter your instruction: ")
 Pass your instruction to the recognizer model:
 
 ```
-graph, graph_data = recognize_instruction_and_create_graph(
-    instruction, config.chat_model, config.commands, config.command_name_to_func,
+graph = recognize_instruction_and_create_graph(
+    instruction, config.chat_model, commands, command_name_to_func,
 )
 ```
 
 Finally, execute the graph of commands:
 
 ```
-execute_commands(config, graph, graph_data, config.commands, config.command_name_to_func)
+graph.execute_commands(config)
 ```
 
 # Basic example
@@ -129,21 +129,21 @@ commands = {
 
 # Commands functions
 
-def write_to_user_command(config: Config, content: str) -> dict[str, Any]:
+def write_to_user_command(config: Config, graph: Graph, content: str) -> dict[str, Any]:
     # add newlines because regex data injection replaces newline characters
     # by \\n substrings.
     content_with_newlines = "\n".join(content.split("\\n"))
     print(f">>> {content_with_newlines}")
     return {}
 
-def request_user_input_command(config: Config, message: str) -> dict[str, Any]:
+def request_user_input_command(config: Config, graph: Graph, message: str) -> dict[str, Any]:
     input_ = input(f"{message}\n*: ")
     results = {
         "input": input_,
     }
     return results
 
-def write_file_command(config: Config, content: str, file_path: str) -> dict[str, Any]:
+def write_file_command(config: Config, graph: Graph, content: str, file_path: str) -> dict[str, Any]:
     file_dir = Path(file_path).parent
     assert file_dir.exists(), f"Container directory '{file_dir}' does not exist."
     with open(file_path, "w+", encoding="utf-8") as f:
@@ -163,13 +163,13 @@ add_essential_commands(commands, command_name_to_func)
 
 chat_model = "gpt-4-0314"
 
-config = Config(chat_model, commands, command_name_to_func)
+config = Config(chat_model, verbosity=1)
 
 instruction = input("Enter your prompt: ")
-graph, graph_data = recognize_instruction_and_create_graph(
-    instruction, config.chat_model, config.commands, config.command_name_to_func,
+graph = recognize_instruction_and_create_graph(
+    instruction, config.chat_model, commands, command_name_to_func,
 )
-execute_commands(config, graph, graph_data, config.commands, config.command_name_to_func)
+graph.execute_commands(config)
 ```
 
 # Adding custom commands
@@ -232,7 +232,7 @@ commands = {
 
     * The name of the function is irrelevant.
 
-    * The first argument must be the Config object.
+    * The first argument must be the Config object. The second argument is the Graph object.
 
     * The arguments must match the arguments from the commands dictionary.
 
@@ -242,21 +242,21 @@ commands = {
 
 ***Example***
 ```
-def write_to_user_command(config: Config, content: str) -> dict[str, Any]:
+def write_to_user_command(config: Config, graph: Graph, content: str) -> dict[str, Any]:
     # add newlines because regex data injection replaces newline characters
     # by \\n substrings.
     content_with_newlines = "\n".join(content.split("\\n"))
     print(f">>> {content_with_newlines}")
     return {}
 
-def request_user_input_command(config: Config, message: str) -> dict[str, Any]:
+def request_user_input_command(config: Config, graph: Graph, message: str) -> dict[str, Any]:
     input_ = input(f"{message}\n*: ")
     results = {
         "input": input_,
     }
     return results
 
-def write_file_command(config: Config, content: str, file_path: str) -> dict[str, Any]:
+def write_file_command(config: Config, graph: Graph, content: str, file_path: str) -> dict[str, Any]:
     file_dir = Path(file_path).parent
     assert file_dir.exists(), f"Container directory '{file_dir}' does not exist."
     with open(file_path, "w+", encoding="utf-8") as f:

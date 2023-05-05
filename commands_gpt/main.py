@@ -13,7 +13,7 @@ add_essential_commands(commands, command_name_to_func)
 
 chat_model = "gpt-4-0314"
 
-config = Config(chat_model, 2)
+config = Config(chat_model, verbosity=1)
 
 instruction = input("Enter your prompt: ")
 graph = recognize_instruction_and_create_graph(
