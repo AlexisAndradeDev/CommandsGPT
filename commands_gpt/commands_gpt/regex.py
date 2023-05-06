@@ -17,6 +17,14 @@ def get_indexed_data(data_name: str, generated_data_by_node: Dict[str, Any]) -> 
     else:
         raise AssertionError(f"Could not get data for {data_name}. Indexes for type {type(data)} are not supported.")
 
+def fix_for_json(value_as_str: str):
+    # Replace newlines with escaped newlines
+    value_as_str = value_as_str.replace(r"\n", "\\n")
+
+    # Escape double quotes inside the string
+    value_as_str = value_as_str.replace('"', '\\"')
+    return value_as_str
+
 def replace_generated_data_by_node(match_obj, generated_data_by_node: Dict[str, Any]) -> str:
     # Get the data name from the matched object
     data_name = match_obj.group(1)
@@ -27,8 +35,10 @@ def replace_generated_data_by_node(match_obj, generated_data_by_node: Dict[str, 
     else:
         value = generated_data_by_node[data_name]
 
-    # Replace newlines with escaped newlines
-    return str(value).replace(r"\n", "\\n")
+    value_as_str = str(value)
+    value_as_str = fix_for_json(value_as_str)
+
+    return value_as_str
 
 def inject_node_data(raw_commands_data: str, node_id, generated_data_by_node: dict[str, Any]):
     pattern = rf"__&{node_id}\.(\w+)__"
