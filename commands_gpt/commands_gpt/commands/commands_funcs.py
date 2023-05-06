@@ -2,7 +2,7 @@ from typing import Any, Callable
 
 from ..chat import get_answer_from_model
 from ..config import Config
-from .graphs import Graph, generate_graph_data
+from .graphs import Graph
 
 ESSENTIAL_COMMANDS = {
     "THINK": {
