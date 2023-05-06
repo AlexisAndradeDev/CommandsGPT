@@ -1,7 +1,7 @@
 """
 You are free to modify this module to create new commands.
 You don't need to create them in this file; just pass the command functions
-to the Config object (as seen in main.py)
+(as seen in main.py)
 """
 from typing import Any
 from pathlib import Path
