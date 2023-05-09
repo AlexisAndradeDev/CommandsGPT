@@ -3,6 +3,7 @@ import json
 from typing import Any, Callable
 
 from .. import regex
+from .. import instruction_recognition
 from ..static import StaticVar
 from ..config import Config
 
@@ -116,20 +117,28 @@ class Graph:
         if node.id in self.data_references:
             self.inject_node_data(node.id, node.data_generated)
 
-    def print_graph(self):
+    def print_graph(self, explain_graph: bool):
         print("\n\n--- Commands graph ---")
+
+        print("\n~~ Graph ~~")
         for node in self.nodes.values():
             print(f"\n{node.id}. {node.command_name}")
             if node.previous_command_id:
                 print(f"\n\tExecuted after node «{node.previous_command_id}».")
             if node.dependent_on_data:
                 print(f"\n\t\tResult field '{node.dependent_on_data}' of node «{node.previous_command_id}» must have value «{node.required_value}» in order to execute this node.")
+
+        if explain_graph:
+            print("\n~~ Explanation ~~")
+            explanation = instruction_recognition.explain_graph_in_natural_language(self.raw_commands_data.val, self.commands)
+            print(explanation)
+
         print("\n--- -------------- ---\n")
 
     def execute_commands(self, config: Config):
         self.initialize()
         if config.verbosity >= 1:
-            self.print_graph()
+            self.print_graph(config.explain_graph)
 
         for node_id in sorted(self.nodes.keys()):
             self.execute_node(node_id, config)
