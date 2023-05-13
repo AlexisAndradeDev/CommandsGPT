@@ -17,12 +17,24 @@ If you're using a virtual environment:
 pipenv install commandsgpt
 ```
 
+You also have to install the OpenAI package:
+
+```
+pip install openai
+```
+
+or
+
+```
+pipenv install openai
+```
+
 # Basic usage
 
 Create a `commands` dictionary that will store the commands described in natural language. Create the functions that will be called when the commands are executed (they must match the arguments and return values of the `commands` dict; the first parameter of these functions must be a Config object). Create a `command_name_to_func` dictionary that will take the name of a command and return the corresponding function.
 
 *Example of commands dictionary*
-```
+```python
 commands = {
     "REQUEST_USER_INPUT": {
         "description": "Asks the user to input data through the interface.",
@@ -38,7 +50,7 @@ commands = {
 ```
 
 *Example of a command function*
-```
+```python
 def request_user_input_command(config: Config, graph: Graph, message: str) -> dict[str, Any]:
     input_ = input(f"{message}\n*: ")
     results = {
@@ -48,7 +60,7 @@ def request_user_input_command(config: Config, graph: Graph, message: str) -> di
 ```
 
 *Example of command_name_to_func dictionary*
-```
+```python
 command_name_to_func = {
     "REQUEST_USER_INPUT": request_user_input_command,
     ...
@@ -59,39 +71,41 @@ Add the ***essential commands*** to your commands dictionaries.
 * These are the default commands that implement core logic to the model's thinking, like an IF command.
 * If you already defined your own core logic commands (IF command, THINK command, etc.), then you are free not to use them.
 
-```
+```python
 from commands_gpt.commands.commands_funcs import add_essential_commands
 add_essential_commands(commands, command_name_to_func)
 ```
 
-Your `config` object: 
-```
-config = Config("gpt-4-0314", verbosity=1) # verbosity is optional
+Your `config` object:
+```python
+# keyword arguments are optional
+config = Config("gpt-4-0314", verbosity=1, explain_graph=True)
 ```
 
 Create an instruction:
 
-```
+```python
 instruction = input("Enter your instruction: ")
 ```
 
 Pass your instruction to the recognizer model:
 
-```
+```python
 graph = recognize_instruction_and_create_graph(
     instruction, config.chat_model, commands, command_name_to_func,
+    verbosity=config.verbosity,
 )
 ```
 
 Finally, execute the graph of commands:
 
-```
+```python
 graph.execute_commands(config)
 ```
 
 # Basic example
 
-```
+```python
 from typing import Any
 from pathlib import Path
 from commands_gpt.instruction_recognition import recognize_instruction_and_create_graph
@@ -163,11 +177,12 @@ add_essential_commands(commands, command_name_to_func)
 
 chat_model = "gpt-4-0314"
 
-config = Config(chat_model, verbosity=1)
+config = Config(chat_model, verbosity=1, explain_graph=True)
 
 instruction = input("Enter your prompt: ")
 graph = recognize_instruction_and_create_graph(
     instruction, config.chat_model, commands, command_name_to_func,
+    verbosity=config.verbosity,
 )
 graph.execute_commands(config)
 ```
@@ -199,7 +214,7 @@ You can add and modify your own custom commands by creating two dictionaries:
         * **type**: Data type. E.g.: "string", "boolean", "int".
 
 ***Example***
-```
+```python
 commands = {
     "WRITE_TO_USER": {
         "description": "Writes something to the interface to communicate with the user.",
@@ -241,7 +256,7 @@ commands = {
     * The data types must match the ones declared in the commands dictionary.
 
 ***Example***
-```
+```python
 def write_to_user_command(config: Config, graph: Graph, content: str) -> dict[str, Any]:
     # add newlines because regex data injection replaces newline characters
     # by \\n substrings.

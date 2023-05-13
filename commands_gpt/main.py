@@ -1,5 +1,4 @@
 from commands_gpt.instruction_recognition import recognize_instruction_and_create_graph
-from commands_gpt.commands.graphs import Graph
 from commands_gpt.config import Config
 from custom_commands import commands, command_name_to_func
 
@@ -13,10 +12,11 @@ add_essential_commands(commands, command_name_to_func)
 
 chat_model = "gpt-4-0314"
 
-config = Config(chat_model, verbosity=1)
+config = Config(chat_model, verbosity=1, explain_graph=True)
 
 instruction = input("Enter your prompt: ")
 graph = recognize_instruction_and_create_graph(
     instruction, config.chat_model, commands, command_name_to_func,
+    verbosity=config.verbosity,
 )
 graph.execute_commands(config)

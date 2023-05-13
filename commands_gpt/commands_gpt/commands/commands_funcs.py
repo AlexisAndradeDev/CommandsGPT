@@ -22,7 +22,8 @@ ESSENTIAL_COMMANDS = {
         "generates_data": {
             "result": {"description": "Result of the condition: 0 or 1.", "type": "boolean"},
         },
-    }
+    },
+    # TODO: Create a FOR command to increment a counter variable
 }
 
 # Commands functions
