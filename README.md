@@ -64,9 +64,10 @@ from commands_gpt.commands.commands_funcs import add_essential_commands
 add_essential_commands(commands, command_name_to_func)
 ```
 
-Your `config` object: 
+Your `config` object:
 ```
-config = Config("gpt-4-0314", verbosity=1) # verbosity is optional
+# keyword arguments are optional
+config = Config("gpt-4-0314", verbosity=1, explain_graph=True)
 ```
 
 Create an instruction:
@@ -80,6 +81,7 @@ Pass your instruction to the recognizer model:
 ```
 graph = recognize_instruction_and_create_graph(
     instruction, config.chat_model, commands, command_name_to_func,
+    verbosity=config.verbosity,
 )
 ```
 
@@ -163,11 +165,12 @@ add_essential_commands(commands, command_name_to_func)
 
 chat_model = "gpt-4-0314"
 
-config = Config(chat_model, verbosity=1)
+config = Config(chat_model, verbosity=1, explain_graph=True)
 
 instruction = input("Enter your prompt: ")
 graph = recognize_instruction_and_create_graph(
     instruction, config.chat_model, commands, command_name_to_func,
+    verbosity=config.verbosity,
 )
 graph.execute_commands(config)
 ```

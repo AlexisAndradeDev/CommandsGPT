@@ -7,27 +7,34 @@ from .. import instruction_recognition
 from ..static import StaticVar
 from ..config import Config
 
-# status codes
-NOT_REACHED = 0
-NOT_EXECUTED = 1
-EXECUTED = 2
+# next commands field indexes
+NEXT_COMMAND_ID = 0
+DEPENDENT_ON_DATA = 1
+REQUIRED_VALUE = 2
 
 @functools.total_ordering
 class CommandNode:
-    def __init__(self, data: list, commands: dict[str, dict], command_name_to_func: dict[str, Callable]):
+    def __init__(self, data: list, commands: dict[str, dict], 
+            command_name_to_func: dict[str, Callable]):
         self.id = data[0]
-        self.previous_command_id = data[1][0] if data[1] else None
-        self.dependent_on_data = data[1][1] if data[1] else None
-        self.required_value = data[1][2] if data[1] else None
-        self.command_name = data[2]
+        self.command_name = data[1]
 
         assert self.command_name in commands, f"Command '{self.command_name}' does not exist."
         assert self.command_name in command_name_to_func, f"Command '{self.command_name}' does not have a function declaration."
 
         self.command = command_name_to_func[self.command_name]
-        self.arguments = data[3] if len(data) > 3 else None
+        self.arguments = data[2]
 
-        self.status = NOT_REACHED
+        self.next_commands: list[list[int | str | Any]] = data[3]
+        assert all(
+            map(
+                lambda next_command:
+                    (type(next_command[0]) is int and 
+                     type(next_command[1]) in [str, type(None)]),
+                self.next_commands,
+            )
+        ), f"Next commands field must match data types: list[list[int, str, Any]].\n{self.next_commands}"
+
         self.data_generated = None
 
     def __eq__(self, other):
@@ -37,17 +44,29 @@ class CommandNode:
         return self.id < other.id
 
     def __str__(self):
-        return f"CommandNode(id={self.id}, previous_command_id={self.previous_command_id}, dependent_on_data={self.dependent_on_data}, required_value={self.required_value}, command={self.command})"
+        return f"CommandNode(id={self.id}, command={self.command})"
 
     def execute_command(self, config: Config, graph, arguments: dict[str, Any]):
         print(f"\n\nRunning '{self.command_name}' command with id {self.id}...")
         if config.verbosity >= 2:
             print(f"Using arguments: {arguments}")
         self.data_generated = self.command(config, graph, **arguments)
+    
+    def get_next_commands_to_execute(self) -> list[int]:
+        next_commands_to_execute = []
+        for next_command in self.next_commands:
+            next_command_id = next_command[NEXT_COMMAND_ID]
+            dependent_on_data = next_command[DEPENDENT_ON_DATA]
+            required_value = next_command[REQUIRED_VALUE]
+
+            if dependent_on_data is None: # doesn't matter the result of current node
+                next_commands_to_execute.append(next_command_id)
+            else: # next command execution depends on the result of current node
+                if self.data_generated[dependent_on_data] == required_value:
+                    next_commands_to_execute.append(next_command_id)
+        return next_commands_to_execute
 
 class Graph:
-    # TODO: Do not call twice set_start_data when initializing a graph (__init__ -> initialize -> build_graph)
-
     def __init__(self, raw_commands_data: StaticVar, commands: dict[str, dict], 
             command_name_to_func: dict[str, Callable]):
         self.set_start_data(raw_commands_data, commands, command_name_to_func)
@@ -71,7 +90,6 @@ class Graph:
             if node.id in self.reached_nodes_ids:
                 # recover results of the node
                 reached_node = self.nodes[node.id]
-                node.status = reached_node.status
                 node.data_generated = reached_node.data_generated
             self.nodes[node.id] = node
 
@@ -88,34 +106,18 @@ class Graph:
 
         # rebuild graph
         self.build_graph(new_raw_commands_data, self.commands, self.command_name_to_func)
-    
-    def execute_node(self, node_id: int, config: Config):
+        
+    def execute_node(self, node_id: int, config: Config) -> list[int]:
         node = self.nodes[node_id]
-
-        if node.status == EXECUTED:
-            return
-
-        if node.previous_command_id is not None:
-            previous_node = self.nodes[node.previous_command_id]
-            if previous_node.status == NOT_EXECUTED:
-                # the previous node was not executed, so this node will not
-                # activate
-                return
-
-            if previous_node.status == NOT_REACHED:
-                self.execute_node(previous_node.id, config)
-
-            if node.dependent_on_data:
-                if previous_node.data_generated[node.dependent_on_data] != node.required_value:
-                    node.status = NOT_EXECUTED
-                    return
-
+    
         node.execute_command(config, self, node.arguments)
         self.reached_nodes_ids.append(node.id)
-        node.status = EXECUTED
 
         if node.id in self.data_references:
             self.inject_node_data(node.id, node.data_generated)
+        
+        next_commands_to_execute = node.get_next_commands_to_execute()
+        return next_commands_to_execute
 
     def print_graph(self, explain_graph: bool):
         print("\n\n--- Commands graph ---")
@@ -123,10 +125,14 @@ class Graph:
         print("\n~~ Graph ~~")
         for node in self.nodes.values():
             print(f"\n{node.id}. {node.command_name}")
-            if node.previous_command_id:
-                print(f"\n\tExecuted after node «{node.previous_command_id}».")
-            if node.dependent_on_data:
-                print(f"\n\t\tResult field '{node.dependent_on_data}' of node «{node.previous_command_id}» must have value «{node.required_value}» in order to execute this node.")
+            
+            if node.next_commands:
+                print(f"\tCommands executed by this node:")
+                for next_command_id, dependent_on_data, required_value in node.next_commands:
+                    next_node = self.nodes[next_command_id]
+                    print(f"\t{next_node.id}. {next_node.command_name}")
+                    if dependent_on_data is not None:
+                        print(f"\t\tIf '{dependent_on_data}' generated data has value: {required_value}.")
 
         if explain_graph:
             print("\n~~ Explanation ~~")
@@ -140,8 +146,17 @@ class Graph:
         if config.verbosity >= 1:
             self.print_graph(config.explain_graph)
 
-        for node_id in sorted(self.nodes.keys()):
-            self.execute_node(node_id, config)
+        first_node_id = sorted(self.nodes.keys())[0]
+        next_commands_to_execute = self.execute_node(first_node_id, config)
+        new_next_commands_to_execute = []
+        while True:
+            new_next_commands_to_execute.clear()
+            for next_command_id in next_commands_to_execute:
+                new_next_commands_to_execute.extend(self.execute_node(next_command_id, config))
+            next_commands_to_execute = new_next_commands_to_execute.copy()
+
+            if not next_commands_to_execute:
+                break
 
 def generate_graph_build_data(raw_commands_data):
     """
