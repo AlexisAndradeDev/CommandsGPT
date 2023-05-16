@@ -17,11 +17,16 @@ If you're using a virtual environment:
 pipenv install commandsgpt
 ```
 
-You also have to install the following packages:
+You also have to install the OpenAI package:
 
 ```
 pip install openai
-pip install openai[datalib]
+```
+
+or
+
+```
+pipenv install openai
 ```
 
 # Basic usage
