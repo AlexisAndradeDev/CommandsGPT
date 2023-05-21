@@ -55,10 +55,7 @@ commands = {
 # The data types must match the ones declared in the commands dictionary
 
 def write_to_user_command(config: Config, graph: Graph, content: str) -> dict[str, Any]:
-    # add newlines because regex data injection replaces newline characters
-    # by \\n substrings.
-    content_with_newlines = "\n".join(content.split("\\n"))
-    print(f">>> {content_with_newlines}")
+    print(f">>> {content}")
     return {}
 
 def request_user_input_command(config: Config, graph: Graph, message: str) -> dict[str, Any]:

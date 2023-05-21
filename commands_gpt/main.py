@@ -12,11 +12,11 @@ add_essential_commands(commands, command_name_to_func)
 
 chat_model = "gpt-4-0314"
 
-config = Config(chat_model, verbosity=1, explain_graph=True)
+config = Config(chat_model, verbosity=2, explain_graph=False, save_graph_as_file=False)
 
 instruction = input("Enter your prompt: ")
 graph = recognize_instruction_and_create_graph(
     instruction, config.chat_model, commands, command_name_to_func,
-    verbosity=config.verbosity,
+    verbosity=config.verbosity, save_graph_as_file=config.save_graph_as_file
 )
 graph.execute_commands(config)
