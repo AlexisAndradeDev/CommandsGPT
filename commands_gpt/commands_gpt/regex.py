@@ -17,12 +17,20 @@ def get_indexed_data(data_name: str, generated_data_by_node: Dict[str, Any]) -> 
     else:
         raise AssertionError(f"Could not get data for {data_name}. Indexes for type {type(data)} are not supported.")
 
-def fix_for_json(value_as_str: str):
+def escape_str_for_json(value_as_str: str):
     # Replace newlines with escaped newlines
     value_as_str = value_as_str.replace(r"\n", "\\n")
 
     # Escape double quotes inside the string
     value_as_str = value_as_str.replace('"', '\\"')
+    return value_as_str
+
+def unescape_str_in_json(value_as_str: str):
+    # Replace escaped newlines with newlines
+    value_as_str = value_as_str.replace("\\n", r"\n")
+
+    # Replace escaped double quotes with double quotes
+    value_as_str = value_as_str.replace('\\"', '"')
     return value_as_str
 
 def replace_generated_data_by_node(match_obj, generated_data_by_node: Dict[str, Any]) -> str:
@@ -36,7 +44,7 @@ def replace_generated_data_by_node(match_obj, generated_data_by_node: Dict[str, 
         value = generated_data_by_node[data_name]
 
     value_as_str = str(value)
-    value_as_str = fix_for_json(value_as_str)
+    value_as_str = escape_str_for_json(value_as_str)
 
     return value_as_str
 
@@ -64,7 +72,6 @@ def find_data_references_indices(raw_commands_data: str) -> dict[int, dict[str, 
         raw_commands_data input string.
 
     Example:
-        >>> find_data_references_indices('''[1, [], "SEARCH_GOOGLE", {"query": "mejores cursos sobre ASP.Net"}], [2, [1, None, None], "READ_WEBPAGE", {"url": "__&1.urls[0]__"}], [3, [2, None, None], "IF", {"condition": "¿Es un curso relevante sobre ASP.Net? __&2.text__"}], [4, [3, "result", 1], "WRITE_TO_USER", {"content": "Curso relevante: __&1.urls[0]__"}], [5, [3, "result", 0], "WRITE_TO_USER", {"content": "No es relevante."}]''')
         {1: {'urls[0]': [(115, 129), (299, 313)]}, 2: {'text': [(214, 225)]}}
     """
     pattern = r"__&(\d+)\.(\w+(?:\[\d+\])*)__"
