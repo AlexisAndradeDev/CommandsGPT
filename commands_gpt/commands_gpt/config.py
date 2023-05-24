@@ -13,3 +13,6 @@ class Config():
         self.explain_graph = explain_graph
         assert type(save_graph_as_file) is bool, f"Save graph as file flag must be boolean type."
         self.save_graph_as_file = save_graph_as_file
+
+        if verbosity >= 1:
+            print(f"Verbosity set to {verbosity}.")

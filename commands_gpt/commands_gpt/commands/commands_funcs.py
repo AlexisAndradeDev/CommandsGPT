@@ -3,6 +3,7 @@ from typing import Any, Callable
 from ..chat import get_answer_from_model
 from ..config import Config
 from .graphs import Graph
+from ..util.math_expr import safe_eval_math_expr
 
 ESSENTIAL_COMMANDS = {
     "THINK": {
@@ -21,6 +22,15 @@ ESSENTIAL_COMMANDS = {
         },
         "generates_data": {
             "result": {"description": "Result of the condition: 0 or 1.", "type": "boolean"},
+        },
+    },
+    "CALCULATE": {
+        "description": "Evaluates a mathematical expression in a str. Supports +, -, *, /, %, **, //. Can be entered in natural language.",
+        "arguments": {
+            "expression": {"description": "Math expression. '(-1) ** (1/2)', 'Negative one raised to 1/2.'", "type": "string"},
+        },
+        "generates_data": {
+            "result": {"description": "Result of evaluation", "type": "int or float or complex"},
         },
     },
     # TODO: Create a FOR command to increment a counter variable
@@ -60,6 +70,25 @@ def if_command(config: Config, graph: Graph, condition: str) -> dict[str, Any]:
     except Exception as e:
         print(f"Could not convert result from IF command '{result}' to boolean.")
         raise e
+
+    results = {
+        "result": result,
+    }
+    return results
+
+def calculate_command(config: Config, graph: Graph, expression: str) -> dict[str, Any]:
+    try:
+        result = safe_eval_math_expr(expression)
+    except ValueError:
+        # TODO: convert from natural language to math expression
+        messages = [
+            {
+                "role": "system",
+                "content": f"You are a model that takes a math expression in natural language and returns JUST the math expression, without any words. 'Negative one raised to the 1/2 plus eight' -> '(-1) ** (1/2) + 8'"
+            }
+        ]
+        expression_ = get_answer_from_model(expression, config.chat_model, messages)
+        result = safe_eval_math_expr(expression_)
 
     results = {
         "result": result,
