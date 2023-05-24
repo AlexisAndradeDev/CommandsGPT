@@ -6,7 +6,7 @@ Create new commands easily by describing them using natural language and coding 
 
 # Installation
 
-Install the `commandsgpt` module.
+* Install the `commandsgpt` module.
 
 ```
 pip install commandsgpt
@@ -17,7 +17,7 @@ If you're using a virtual environment:
 pipenv install commandsgpt
 ```
 
-You also have to install the OpenAI package:
+* You also have to install the OpenAI package:
 
 ```
 pip install openai
@@ -28,6 +28,8 @@ or
 ```
 pipenv install openai
 ```
+
+* Set an environment variable OPENAI_API_KEY to store your OpenAI key.
 
 # Usage
 
@@ -81,7 +83,7 @@ command_name_to_func = {
 
 Add the ***essential commands*** to your commands dictionaries.
 * These are the default commands that implement core logic to the model's thinking, like an IF command.
-* If you already defined your own core logic commands (IF command, THINK command, etc.), then you are free not to use them.
+* If you already defined your own core logic commands (IF command, THINK command, CALCULATE command, etc.), then you are free not to use them.
 
 ```python
 from commands_gpt.commands.commands_funcs import add_essential_commands

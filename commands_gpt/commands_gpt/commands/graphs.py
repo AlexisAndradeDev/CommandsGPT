@@ -1,10 +1,8 @@
-import functools
 import json
 from typing import Any, Callable
 
 from .. import regex
 from .. import instruction_recognition
-from ..static import StaticVar
 from ..config import Config
 
 # next commands field indexes
@@ -52,22 +50,22 @@ class CommandNode:
         return next_commands_to_execute
 
 class Graph:
-    def __init__(self, raw_commands_data: StaticVar, commands: dict[str, dict], 
+    def __init__(self, raw_commands_data: str, commands: dict[str, dict], 
             command_name_to_func: dict[str, Callable]):
         self.set_start_data(raw_commands_data, commands, command_name_to_func)
         self.initialize()
 
-    def set_start_data(self, raw_commands_data: StaticVar, commands: dict[str, dict], 
+    def set_start_data(self, raw_commands_data: str, commands: dict[str, dict], 
             command_name_to_func: dict[str, Callable]):
         self.raw_commands_data = raw_commands_data
         self.commands = commands
         self.command_name_to_func = command_name_to_func
 
-    def build_graph(self, raw_commands_data: StaticVar, commands: dict[str, dict], 
+    def build_graph(self, raw_commands_data: str, commands: dict[str, dict], 
             command_name_to_func: dict[str, Callable]):
         self.set_start_data(raw_commands_data, commands, command_name_to_func)
 
-        graph_build_data = generate_graph_build_data(raw_commands_data.val)
+        graph_build_data = generate_graph_build_data(raw_commands_data)
         (self.commands_data_str_by_node,
          self.commands_data,
          self.data_references_in_each_command) = graph_build_data
@@ -96,15 +94,15 @@ class Graph:
         node = self.nodes[node_id]
 
         # inject data references to current node's arguments
-        injected_command_data_str = StaticVar(self.commands_data_str_by_node[node.id])
+        injected_command_data_str = self.commands_data_str_by_node[node.id]
         for node_to_inject_id in self.data_references_in_each_command[node.id]:
             node_to_inject = self.nodes[node_to_inject_id]
             # update node data
-            injected_command_data_str = StaticVar(regex.inject_node_data(
-                injected_command_data_str.val, node_to_inject.id,
+            injected_command_data_str = regex.inject_node_data(
+                injected_command_data_str, node_to_inject.id,
                 node_to_inject.data_generated,
-            ))
-        injected_command_data = get_node_command_data(injected_command_data_str.val)
+            )
+        injected_command_data = get_node_command_data(injected_command_data_str)
 
         # update node
         node = self.build_node(injected_command_data)
@@ -116,7 +114,7 @@ class Graph:
         next_commands_to_execute = node.get_next_commands_to_execute()
         return next_commands_to_execute
 
-    def print_graph(self, explain_graph: bool):
+    def print_graph(self, explain_graph: bool, config: Config):
         print("\n\n--- Commands graph ---")
 
         print("\n~~ Graph ~~")
@@ -133,7 +131,7 @@ class Graph:
 
         if explain_graph:
             print("\n~~ Explanation ~~")
-            explanation = instruction_recognition.explain_graph_in_natural_language(self.raw_commands_data.val, self.commands)
+            explanation = instruction_recognition.explain_graph_in_natural_language(self.raw_commands_data, config.chat_model, self.commands)
             print(explanation)
 
         print("\n--- -------------- ---\n")
@@ -141,7 +139,7 @@ class Graph:
     def execute_commands(self, config: Config):
         self.initialize()
         if config.verbosity >= 1:
-            self.print_graph(config.explain_graph)
+            self.print_graph(config.explain_graph, config)
 
         first_node_id = sorted(self.nodes.keys())[0]
         next_commands_to_execute = self.execute_node(first_node_id, config)
@@ -159,7 +157,7 @@ def get_node_data_references(command_data_str: str) -> dict:
     data_references = regex.find_data_references_indices(command_data_str)
     return data_references
 
-def unescape_node_arguments(arguments: dict) -> dict:
+def unescape_node_arguments(arguments: dict):
     for name, value in arguments.items():
         if type(value) is str:
             arguments[name] = regex.unescape_str_in_json(value)
