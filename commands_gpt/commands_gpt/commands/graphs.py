@@ -1,8 +1,8 @@
 import json
 from typing import Any, Callable
 
+from ..recognizers import AbstractRecognizer
 from .. import regex
-from .. import instruction_recognition
 from ..config import Config
 
 # next commands field indexes
@@ -50,22 +50,20 @@ class CommandNode:
         return next_commands_to_execute
 
 class Graph:
-    def __init__(self, raw_commands_data: str, commands: dict[str, dict], 
-            command_name_to_func: dict[str, Callable]):
-        self.set_start_data(raw_commands_data, commands, command_name_to_func)
+    def __init__(self, recognizer: AbstractRecognizer, commands_data_str: str):
+        self.set_start_data(recognizer, commands_data_str)
         self.initialize()
 
-    def set_start_data(self, raw_commands_data: str, commands: dict[str, dict], 
-            command_name_to_func: dict[str, Callable]):
-        self.raw_commands_data = raw_commands_data
-        self.commands = commands
-        self.command_name_to_func = command_name_to_func
+    def set_start_data(self, recognizer: AbstractRecognizer, commands_data_str: str):
+        self.recognizer = recognizer
+        self.commands_data_str = commands_data_str
+        self.commands = recognizer.commands
+        self.command_name_to_func = recognizer.command_name_to_func
 
-    def build_graph(self, raw_commands_data: str, commands: dict[str, dict], 
-            command_name_to_func: dict[str, Callable]):
-        self.set_start_data(raw_commands_data, commands, command_name_to_func)
+    def build_graph(self, commands_data_str: str):
+        self.set_start_data(self.recognizer, commands_data_str)
 
-        graph_build_data = generate_graph_build_data(raw_commands_data)
+        graph_build_data = generate_graph_build_data(commands_data_str)
         (self.commands_data_str_by_node,
          self.commands_data,
          self.data_references_in_each_command) = graph_build_data
@@ -88,7 +86,7 @@ class Graph:
     def initialize(self):
         self.reached_nodes_ids: list[int] = []
         self.nodes: dict[str, CommandNode] = {}
-        self.build_graph(self.raw_commands_data, self.commands, self.command_name_to_func)
+        self.build_graph(self.commands_data_str)
             
     def execute_node(self, node_id: int, config: Config) -> list[int]:
         node = self.nodes[node_id]
@@ -114,7 +112,7 @@ class Graph:
         next_commands_to_execute = node.get_next_commands_to_execute()
         return next_commands_to_execute
 
-    def print_graph(self, explain_graph: bool, config: Config):
+    def print_graph(self, explain_graph: bool):
         print("\n\n--- Commands graph ---")
 
         print("\n~~ Graph ~~")
@@ -131,7 +129,7 @@ class Graph:
 
         if explain_graph:
             print("\n~~ Explanation ~~")
-            explanation = instruction_recognition.explain_graph_in_natural_language(self.raw_commands_data, config.chat_model, self.commands)
+            explanation = self.recognizer.explain_graph_in_natural_language(self.commands_data_str)
             print(explanation)
 
         print("\n--- -------------- ---\n")
@@ -139,7 +137,7 @@ class Graph:
     def execute_commands(self, config: Config):
         self.initialize()
         if config.verbosity >= 1:
-            self.print_graph(config.explain_graph, config)
+            self.print_graph(config.explain_graph)
 
         first_node_id = sorted(self.nodes.keys())[0]
         next_commands_to_execute = self.execute_node(first_node_id, config)
@@ -192,16 +190,16 @@ def get_node_command_data(command_data_str: str) -> dict:
 
     return command_data
 
-def generate_graph_build_data(raw_commands_data: str):
+def generate_graph_build_data(commands_data_str: str):
     """
     Parses a commands data string to a JSON to create the graph data
 
     Args:
-        raw_commands_data (str): A string containing raw commands data in JSON-Lines-like format that has not yet been converted to a JSON.
+        commands_data_str (str): A string containing the data to create a graph/command.
 
     Returns:
         a tuple: Containing:
-            raw_commands_data_by_node (dict of str): Commands data as a string.
+            commands_data_str_by_node (dict of str): Commands data as a string.
                 Keys are the ID of the commands; values are the commands data
                 as strings.
         
@@ -213,8 +211,8 @@ def generate_graph_build_data(raw_commands_data: str):
     data_references_in_each_command = {}
 
     commands_data = {}
-    raw_commands_data_by_node = {}
-    for line_num, command_data_str in enumerate(raw_commands_data.splitlines(), start=1):
+    commands_data_str_by_node = {}
+    for line_num, command_data_str in enumerate(commands_data_str.splitlines(), start=1):
         data_references = get_node_data_references(command_data_str)
         try:
             command_data = get_node_command_data(command_data_str)
@@ -224,8 +222,8 @@ def generate_graph_build_data(raw_commands_data: str):
 
         command_id = command_data["id"]
 
-        raw_commands_data_by_node[command_id] = command_data_str
+        commands_data_str_by_node[command_id] = command_data_str
         commands_data[command_id] = command_data
         data_references_in_each_command[command_id] = data_references
 
-    return raw_commands_data_by_node, commands_data, data_references_in_each_command
+    return commands_data_str_by_node, commands_data, data_references_in_each_command
