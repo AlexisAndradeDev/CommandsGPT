@@ -42,6 +42,6 @@ def safe_eval_math_expr(expression: str) -> int | float | complex:
     try:
         parsed_expr = ast.parse(expression, mode='eval')
     except SyntaxError:
-        raise ValueError("Invalid expression.")
+        raise ValueError(f"Invalid expression: {expression}.")
 
     return evaluate_expr(parsed_expr.body)

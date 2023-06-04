@@ -102,18 +102,22 @@ Create an instruction:
 instruction = input("Enter your instruction: ")
 ```
 
+Create a recognizer:
+
+```python
+recognizer = ComplexRecognizer(config, commands, command_name_to_func)
+```
+
 Pass your instruction to the recognizer model:
 
 ```python
-graph = recognize_instruction_and_create_graph(
-    instruction, config.chat_model, commands, command_name_to_func,
-    verbosity=config.verbosity, save_graph_as_file=config.save_graph_as_file
-)
+commands_data_str = recognizer.recognize(instruction)
 ```
 
-Finally, execute the graph of commands:
+Create the graph of commands and execute it:
 
 ```python
+graph = Graph(recognizer, commands_data_str)
 graph.execute_commands(config)
 ```
 
@@ -220,9 +224,10 @@ chat_model = "gpt-4-0314"
 config = Config(chat_model, verbosity=2, explain_graph=False, save_graph_as_file=False)
 
 instruction = input("Enter your prompt: ")
-graph = recognize_instruction_and_create_graph(
-    instruction, config.chat_model, commands, command_name_to_func,
-    verbosity=config.verbosity, save_graph_as_file=config.save_graph_as_file
-)
+
+recognizer = ComplexRecognizer(config, commands, command_name_to_func)
+
+commands_data_str = recognizer.recognize(instruction)
+graph = Graph(recognizer, commands_data_str)
 graph.execute_commands(config)
 ```

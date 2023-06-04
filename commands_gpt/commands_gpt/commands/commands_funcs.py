@@ -47,7 +47,7 @@ def think_command(config: Config, graph: Graph, about: str) -> dict[str, Any]:
     messages = [
         {
             "role": "system", 
-            "content": "You are a model used when executing a 'THINK' command, which function is to reflect, think, write, or ideate."
+            "content": "You are a model used when executing a 'THINK' command, which function is to reflect, think, write, or ideate. Only do what the prompt says; DO NOT add useless/extra information/irrelevant chat/irrelevant explanation."
         },
     ]
     thought = get_answer_from_model(about, config.chat_model, messages)
@@ -80,11 +80,10 @@ def calculate_command(config: Config, graph: Graph, expression: str) -> dict[str
     try:
         result = safe_eval_math_expr(expression)
     except ValueError:
-        # TODO: convert from natural language to math expression
         messages = [
             {
                 "role": "system",
-                "content": f"You are a model that takes a math expression in natural language and returns JUST the math expression, without any words. 'Negative one raised to the 1/2 plus eight' -> '(-1) ** (1/2) + 8'"
+                "content": f"You are a model that takes a math expression in natural language and returns ONLY the math expression, without any words. You can only use +, -, *, /, %, **, //. Example: 'Square root of negative one plus eight' -> '(-1) ** (1/2) + 8'"
             }
         ]
         expression_ = get_answer_from_model(expression, config.chat_model, messages)
