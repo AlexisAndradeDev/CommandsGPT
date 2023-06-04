@@ -212,7 +212,8 @@ command_name_to_func = {
 
 ## main.py
 ```python
-from commands_gpt.instruction_recognition import recognize_instruction_and_create_graph
+from commands_gpt.recognizers import ComplexRecognizer
+from commands_gpt.commands.graphs import Graph
 from commands_gpt.config import Config
 from custom_commands import commands, command_name_to_func
 
