@@ -34,17 +34,6 @@ commands = {
         },
         "generates_data": {},
     },
-    "CONCATENATE_STRINGS": {
-        "description": "Concatenates two strings. \"Hello\" and \"World\": \"HelloWorld\"",
-        "arguments": {
-            "str1": {"description": "String 1.", "type": "string"},
-            "str2": {"description": "String 2.", "type": "string"},
-            "sep": {"description": "Separator between the strs. Ex: \"\\n\", \",\", \"\".", "type": "string"},
-        },
-        "generates_data": {
-            "concatenated": {"description": "Concatenated string.", "type": "str"},
-        },
-    },
 }
 
 # Commands functions
@@ -73,18 +62,9 @@ def write_file_command(config: Config, graph: Graph, content: str, file_path: st
         f.close()
     return {}
 
-def concatenate_strings_command(config: Config, graph: Graph, str1: str, 
-        str2: str, sep: str) -> dict[str, Any]:
-    concatenated = f"{sep}".join((str1, str2))
-    results = {
-        "concatenated": concatenated,
-    }
-    return results
-
 # add your functions here
 command_name_to_func = {
     "WRITE_TO_USER": write_to_user_command,
     "REQUEST_USER_INPUT": request_user_input_command,
     "WRITE_FILE": write_file_command,
-    "CONCATENATE_STRINGS": concatenate_strings_command,
 }
