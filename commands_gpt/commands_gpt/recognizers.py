@@ -93,11 +93,13 @@ class ComplexRecognizer(AbstractRecognizer):
                 """\nNote that dependent_on_data is NOT a data reference for the next command; it's just what will be used as a CONDITION to determine if the next command will be executed."""
                 """\ndependent_on_data field CAN NOT be 'dependent_on_data'. It must be null if it doesn't matter."""
                 """\nA command can execute multiple next commands."""
+                # TODO: Improve context passing to commands
+
                 # """\nBe concise but *solid* with the structure."""
-                """\n*Consider that the user might write incorrectly and their inputs might be ambiguous*."""
+                """\n*IMPORTANT*: Consider that the user might write incorrectly and their inputs might be ambiguous."""
                 """\nThe only way to reference the data of other commands is by using the __&i.data__ referencing. Commands DO NOT KNOW each other's data."""
                 """\nProvide all the relevant context in the arguments of the commands, so that you're not ambiguous."""
-                """\nNote that each command DOES NOT know about the other commands. You have to use DATA REFERENCES as ARGUMENTS to pass context."""
+                """\n*IMPORTANT*: Note that each command DOES NOT know about the other commands. You have to use DATA REFERENCES as ARGUMENTS to pass context."""
                 """\nBe creative and logic when using the commands' arguments and data references."""
 
                 """\n\nFor example:"""
