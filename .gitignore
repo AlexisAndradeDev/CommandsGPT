@@ -162,3 +162,5 @@ cython_debug/
 # virtual env
 Pipfile
 Pipfile.lock
+
+*.txt

@@ -16,7 +16,7 @@ ESSENTIAL_COMMANDS = {
         },
     },
     "IF": {
-        "description": "Returns the Boolean value of a condition.",
+        "description": "Returns the Boolean value of a condition. ALWAYS use this command to compare values, answers and expressions, even in natural language.",
         "arguments": {
             "condition": {"description": "Condition. Can be in natural language.", "type": "string"},
         },
@@ -72,12 +72,13 @@ def if_command(config: Config, graph: Graph, condition: str) -> dict[str, Any]:
     messages = [
         {
             "role": "system", 
-            "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER.",
+            "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER. Ex.: \"'yes' == 'no'\" -> 0, \"'yea' == 'yes'\" -> 1.",
         },
     ]
     result = get_answer_from_model(condition, config.chat_model, messages)
+
     try:
-        result = bool(result)
+        result = bool(int(result))
     except Exception as e:
         print(f"Could not convert result from IF command '{result}' to boolean.")
         raise e
