@@ -16,7 +16,7 @@ ESSENTIAL_COMMANDS = {
         },
     },
     "IF": {
-        "description": "Returns the Boolean value of a condition.",
+        "description": "Returns the Boolean value of a condition. ALWAYS use this command to compare values, answers and expressions, even in natural language.",
         "arguments": {
             "condition": {"description": "Condition. Can be in natural language.", "type": "string"},
         },
