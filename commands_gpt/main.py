@@ -13,7 +13,7 @@ from custom_commands import commands, command_name_to_func
 from commands_gpt.commands.commands_funcs import add_essential_commands
 add_essential_commands(commands, command_name_to_func)
 
-chat_model = "gpt-4-0314"
+chat_model = "gpt-4-0613"
 
 config = Config(chat_model, verbosity=2, explain_graph=False, save_graph_as_file=False)
 

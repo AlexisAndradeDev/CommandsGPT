@@ -7,7 +7,7 @@ from ..util.math_expr import safe_eval_math_expr
 
 ESSENTIAL_COMMANDS = {
     "THINK": {
-        "description": "Generates a thought in your 'mind' without writing it down yet. This command allows you to create new ideas, reflect, and analyze information. For example, when asked to 'Write a three-paragraph article about Lenz's Law,' you would first use this command to generate the article and then use another to write it.",
+        "description": "Generates a thought/idea/information/article in your 'mind' without writing it down yet. This command allows you to create new ideas, reflect, create information, and analyze information. For example, when asked to 'Write a three-paragraph article about Lenz's Law,' you would first use this command to generate the article and then use another to write it.",
         "arguments": {
             "about": {"description": "What to think about. Example: 'Three-paragraph article about Lenz's Law.'", "type": "string"},
         },
@@ -72,7 +72,7 @@ def if_command(config: Config, graph: Graph, condition: str) -> dict[str, Any]:
     messages = [
         {
             "role": "system", 
-            "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER. Ex.: \"'yes' == 'no'\" -> 0, \"'yea' == 'yes'\" -> 1.",
+            "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER. If it's natural language, don't be too rigorous. Ex.: \"'yes' == 'no'\" -> 0, \"'yeah' == 'yes'\" -> 1, \"'i think so' == 'yes'\" -> 1.",
         },
     ]
     result = get_answer_from_model(condition, config.chat_model, messages)

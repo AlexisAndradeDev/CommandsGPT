@@ -34,6 +34,8 @@ class CommandNode:
         if config.verbosity >= 2:
             print(f"Using arguments: {arguments}")
         self.data_generated = self.command(config, graph, **arguments)
+        if config.verbosity >= 2:
+            print(f"Data generated: {self.data_generated}")
     
     def get_next_commands_to_execute(self) -> list[int]:
         next_commands_to_execute = []
