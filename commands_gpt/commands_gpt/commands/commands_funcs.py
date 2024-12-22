@@ -66,7 +66,7 @@ ESSENTIAL_COMMANDS = {
 def think_command(config: Config, graph: Graph, about: str) -> dict[str, Any]:
     messages = [
         {
-            "role": "system", 
+            "role": config.base_message_role,
             "content": "You are a model used when executing a 'THINK' command, which function is to reflect, think, write, or ideate. Only do what the prompt says; DO NOT add useless/extra information/irrelevant chat/irrelevant explanation."
         },
     ]
@@ -80,7 +80,7 @@ def think_command(config: Config, graph: Graph, about: str) -> dict[str, Any]:
 def if_command(config: Config, graph: Graph, condition: str) -> dict[str, Any]:
     messages = [
         {
-            "role": "system", 
+            "role": config.base_message_role, 
             "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER.",
         },
     ]
@@ -100,7 +100,7 @@ def if_command(config: Config, graph: Graph, condition: str) -> dict[str, Any]:
 def if_ambiguous_command(config: Config, graph: Graph, condition: str) -> dict[str, Any]:
     messages = [
         {
-            "role": "system", 
+            "role": config.base_message_role, 
             "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER. If it's natural language, don't be too rigorous. The answer might be misspelled (ex., 'Jupyter' instead of 'Jupiter'). The answer might be ambiguous, so there are equivalent different answers. Use your logic and knowledge.",
         },
     ]
@@ -123,7 +123,7 @@ def calculate_command(config: Config, graph: Graph, expression: str) -> dict[str
     except ValueError:
         messages = [
             {
-                "role": "system",
+                "role": config.base_message_role,
                 "content": f"You are a model that takes a math expression in natural language and returns ONLY the math expression, without any words. You can only use +, -, *, /, %, **, //. Example: 'Square root of negative one plus eight' -> '(-1) ** (1/2) + 8'"
             }
         ]

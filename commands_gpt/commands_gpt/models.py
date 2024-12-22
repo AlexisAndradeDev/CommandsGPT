@@ -1,4 +1,4 @@
-CHAT_MODELS = ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", "gpt-4o", "o1", "o1-mini"]
+CHAT_MODELS = ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", "gpt-4o", "o1-preview", "o1-mini"]
 
 def model_exists(model_name: str) -> bool:
     return True
