@@ -16,3 +16,5 @@ class Config():
 
         if verbosity >= 1:
             print(f"Verbosity set to {verbosity}.")
+            
+        self.base_message_role = "user" if self.chat_model in ["o1-preview", "o1-mini"] else "system"

@@ -11,16 +11,14 @@ def get_answer_from_model(user_prompt: str, model: str,
     for i in range(1, max_attempts+1):
         try:
             print("Getting answer from model...")
-            response = openai.ChatCompletion.create(
-                model=model, messages=messages,
-            )
+            response = openai.chat.completions.create(model=model, messages=messages,)
 
-        except openai.error.RateLimitError as e:
+        except openai.RateLimitError as e:
             retry_time = e.retry_after if hasattr(e, 'retry_after') else 5
             print(f"Rate limit exceeded. Retrying in {retry_time} seconds...")
             time.sleep(retry_time)
 
-        except openai.error.APIError as e:
+        except openai.APIError as e:
             retry_time = e.retry_after if hasattr(e, 'retry_after') else 5
             print(f"API error occurred. Retrying in {retry_time} seconds...")
             time.sleep(retry_time)
@@ -33,5 +31,5 @@ def get_answer_from_model(user_prompt: str, model: str,
         else:
             break
 
-    answer = response["choices"][0]["message"]["content"]
+    answer = response.choices[0].message.content
     return answer

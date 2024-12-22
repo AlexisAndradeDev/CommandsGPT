@@ -7,7 +7,7 @@ from ..util.math_expr import safe_eval_math_expr
 
 ESSENTIAL_COMMANDS = {
     "THINK": {
-        "description": "Generates a thought in your 'mind' without writing it down yet. This command allows you to create new ideas, reflect, and analyze information. For example, when asked to 'Write a three-paragraph article about Lenz's Law,' you would first use this command to generate the article and then use another to write it.",
+        "description": "Generates a thought/idea/information/article in your 'mind' without writing it down yet. This command allows you to create new ideas, reflect, create information, and analyze information. For example, when asked to 'Write a three-paragraph article about Lenz's Law,' you would first use this command to generate the article and then use another to write it.",
         "arguments": {
             "about": {"description": "What to think about. Example: 'Three-paragraph article about Lenz's Law.'", "type": "string"},
         },
@@ -16,7 +16,16 @@ ESSENTIAL_COMMANDS = {
         },
     },
     "IF": {
-        "description": "Returns the Boolean value of a condition. ALWAYS use this command to compare values, answers and expressions, even in natural language.",
+        "description": "Returns the Boolean value of a condition. ALWAYS use this command to compare values, answers and expressions, even in natural language, ONLY IF the answer can never be ambiguous.",
+        "arguments": {
+            "condition": {"description": "Condition. Can be in natural language.", "type": "string"},
+        },
+        "generates_data": {
+            "result": {"description": "Result of the condition: 0 or 1.", "type": "boolean"},
+        },
+    },
+    "IF_AMBIGUOUS": {
+        "description": "Returns the Boolean value of a condition. ALWAYS use this command to compare values, answers and expressions, even in natural language, ONLY IF the answer can be ambiguous (bad spelling by the user, or equivalent answers like 'yes' and 'yeah').",
         "arguments": {
             "condition": {"description": "Condition. Can be in natural language.", "type": "string"},
         },
@@ -57,7 +66,7 @@ ESSENTIAL_COMMANDS = {
 def think_command(config: Config, graph: Graph, about: str) -> dict[str, Any]:
     messages = [
         {
-            "role": "system", 
+            "role": config.base_message_role,
             "content": "You are a model used when executing a 'THINK' command, which function is to reflect, think, write, or ideate. Only do what the prompt says; DO NOT add useless/extra information/irrelevant chat/irrelevant explanation."
         },
     ]
@@ -71,8 +80,28 @@ def think_command(config: Config, graph: Graph, about: str) -> dict[str, Any]:
 def if_command(config: Config, graph: Graph, condition: str) -> dict[str, Any]:
     messages = [
         {
-            "role": "system", 
-            "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER. Ex.: \"'yes' == 'no'\" -> 0, \"'yea' == 'yes'\" -> 1.",
+            "role": config.base_message_role, 
+            "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER.",
+        },
+    ]
+    result = get_answer_from_model(condition, config.chat_model, messages)
+
+    try:
+        result = bool(int(result))
+    except Exception as e:
+        print(f"Could not convert result from IF command '{result}' to boolean.")
+        raise e
+
+    results = {
+        "result": result,
+    }
+    return results
+
+def if_ambiguous_command(config: Config, graph: Graph, condition: str) -> dict[str, Any]:
+    messages = [
+        {
+            "role": config.base_message_role, 
+            "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER. If it's natural language, don't be too rigorous. The answer might be misspelled (ex., 'Jupyter' instead of 'Jupiter'). The answer might be ambiguous, so there are equivalent different answers. Use your logic and knowledge.",
         },
     ]
     result = get_answer_from_model(condition, config.chat_model, messages)
@@ -94,7 +123,7 @@ def calculate_command(config: Config, graph: Graph, expression: str) -> dict[str
     except ValueError:
         messages = [
             {
-                "role": "system",
+                "role": config.base_message_role,
                 "content": f"You are a model that takes a math expression in natural language and returns ONLY the math expression, without any words. You can only use +, -, *, /, %, **, //. Example: 'Square root of negative one plus eight' -> '(-1) ** (1/2) + 8'"
             }
         ]
