@@ -93,7 +93,7 @@ add_essential_commands(commands, command_name_to_func)
 Your `config` object:
 ```python
 # keyword arguments are optional
-config = Config("gpt-4-0314", verbosity=1, explain_graph=True, save_graph_as_file=False)
+config = Config("gpt-4o", verbosity=2, explain_graph=True, save_graph_as_file=False)
 ```
 
 Create an instruction:
@@ -205,7 +205,7 @@ from custom_commands import commands, command_name_to_func
 from commands_gpt.commands.commands_funcs import add_essential_commands
 add_essential_commands(commands, command_name_to_func)
 
-chat_model = "gpt-4-0314"
+chat_model = "gpt-4o"
 
 config = Config(chat_model, verbosity=2, explain_graph=False, save_graph_as_file=False)
 

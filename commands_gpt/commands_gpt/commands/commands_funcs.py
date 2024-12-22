@@ -16,7 +16,16 @@ ESSENTIAL_COMMANDS = {
         },
     },
     "IF": {
-        "description": "Returns the Boolean value of a condition. ALWAYS use this command to compare values, answers and expressions, even in natural language.",
+        "description": "Returns the Boolean value of a condition. ALWAYS use this command to compare values, answers and expressions, even in natural language, ONLY IF the answer can never be ambiguous.",
+        "arguments": {
+            "condition": {"description": "Condition. Can be in natural language.", "type": "string"},
+        },
+        "generates_data": {
+            "result": {"description": "Result of the condition: 0 or 1.", "type": "boolean"},
+        },
+    },
+    "IF_AMBIGUOUS": {
+        "description": "Returns the Boolean value of a condition. ALWAYS use this command to compare values, answers and expressions, even in natural language, ONLY IF the answer can be ambiguous (bad spelling by the user, or equivalent answers like 'yes' and 'yeah').",
         "arguments": {
             "condition": {"description": "Condition. Can be in natural language.", "type": "string"},
         },
@@ -72,7 +81,27 @@ def if_command(config: Config, graph: Graph, condition: str) -> dict[str, Any]:
     messages = [
         {
             "role": "system", 
-            "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER. If it's natural language, don't be too rigorous. Ex.: \"'yes' == 'no'\" -> 0, \"'yeah' == 'yes'\" -> 1, \"'i think so' == 'yes'\" -> 1.",
+            "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER.",
+        },
+    ]
+    result = get_answer_from_model(condition, config.chat_model, messages)
+
+    try:
+        result = bool(int(result))
+    except Exception as e:
+        print(f"Could not convert result from IF command '{result}' to boolean.")
+        raise e
+
+    results = {
+        "result": result,
+    }
+    return results
+
+def if_ambiguous_command(config: Config, graph: Graph, condition: str) -> dict[str, Any]:
+    messages = [
+        {
+            "role": "system", 
+            "content": f"You are a model that evaluates conditions, both in natural language and symbolic language. Given a condition, you respond with the number «1» (true) or «0» (false). DO NOT write ANYTHING ELSE EVER. If it's natural language, don't be too rigorous. The answer might be misspelled (ex., 'Jupyter' instead of 'Jupiter'). The answer might be ambiguous, so there are equivalent different answers. Use your logic and knowledge.",
         },
     ]
     result = get_answer_from_model(condition, config.chat_model, messages)
